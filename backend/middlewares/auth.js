@@ -1,6 +1,6 @@
 import { User } from "../models/userSchema.js";
 import jwt from "jsonwebtoken";
-import ErrorHandler from "./error.js";
+import ErrorHandler from "./errorMiddleware.js";
 import { catchAsyncErrors } from "./catchAsyncErrors.js";
 
 // Middleware to authenticate dashboard users

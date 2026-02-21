@@ -1,7 +1,7 @@
 import { catchAsyncErrors } from "../middlewares/catchAsyncErrors.js";
 import {User }from "../models/userSchema.js";
 import { generateToken } from "../utils/jwtToken.js";
-import ErrorHandler from "../middlewares/error.js";
+import ErrorHandler from "../middlewares/errorMiddleware.js";
 
 
 export const patientRegister = catchAsyncErrors(async (req, res, next) => {
@@ -22,12 +22,13 @@ export const patientRegister = catchAsyncErrors(async (req, res, next) => {
     if (!firstName || !lastName || !email || !phone || !password || !gender || !dob || !nic || !role) {
         return next(new ErrorHandler("Please Fill Full Form!", 400));
     }
-    const user = await User.findOne({ email });
-    if(user) {
-        return next(new ErrorHandler("User With This Email Already Exists!", 400));
+  
+    let user = await User.findOne({ email });
+    if(user){
+      return next(new ErrorHandler("User aldready registered!",400))
     }
-
-     User = await User.create({
+   
+     user = await User.create({
         firstName,
         lastName,
         email,
@@ -38,13 +39,13 @@ export const patientRegister = catchAsyncErrors(async (req, res, next) => {
         nic,
         role,
     });
-
-    generateToken(user, "User Registered!", 200, res);
-
+    generateToken(user, "user registered" ,200,res);
+   
 });
 
 export const login = catchAsyncErrors(async (req, res, next) => {
   const { email, password, confirmPassword, role } = req.body;
+
   if (!email || !password || !confirmPassword || !role) {
     return next(new ErrorHandler("Please Fill Full Form!", 400));
   }
@@ -65,7 +66,7 @@ export const login = catchAsyncErrors(async (req, res, next) => {
   if (role !== user.role) {
     return next(new ErrorHandler(`User Not Found With This Role!`, 400));
   }
-  generateToken(user, "Login Successfully!", 200, res);
+generateToken(user, "user login successfully" ,200,res);
 });
 
 export const addNewAdmin = catchAsyncErrors(async (req, res, next) => {
@@ -86,7 +87,7 @@ export const addNewAdmin = catchAsyncErrors(async (req, res, next) => {
 
   const isRegistered = await User.findOne({ email });
   if (isRegistered) {
-    return next(new ErrorHandler("Admin With This Email Already Exists!", 400));
+    return next(new ErrorHandler(`${isregistered.role} This Email Already Exists!`, 400));
   }
 
   const admin = await User.create({
@@ -201,7 +202,7 @@ export const getUserDetails = catchAsyncErrors(async (req, res, next) => {
 // Logout function for dashboard admin
 export const logoutAdmin = catchAsyncErrors(async (req, res, next) => {
   res
-    .status(201)
+    .status(200)
     .cookie("adminToken", "", {
       httpOnly: true,
       expires: new Date(Date.now()),

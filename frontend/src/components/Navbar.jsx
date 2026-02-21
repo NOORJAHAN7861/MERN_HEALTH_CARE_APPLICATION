@@ -1,6 +1,7 @@
 import React, { useContext, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { GiHamburgerMenu } from "react-icons/gi";
+import Login from "../Pages/Login";
 import axios from "axios";
 import { toast } from "react-toastify";
 import { Context } from "../main";
@@ -32,7 +33,7 @@ const Navbar = () => {
   return (
     <>
       <nav className={"container"}>
-        <img src="" alt="logo" className="logo" />
+        <img src="C:\Users\NOORJAHAN PP\Downloads\NR_logo_ultra_clear.png" alt="Noor hospital" className="logo" />
         <div className={show ? "navLinks showmenu" : "navLinks"}>
           <div className="links">
             <Link to={"/"} onClick={() => setShow(!show)}>

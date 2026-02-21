@@ -1,4 +1,4 @@
-import express from "express";
+import express from "express"
 import {
   addNewAdmin,
   addNewDoctor,
@@ -9,11 +9,11 @@ import {
   logoutPatient,
   patientRegister,
 } from "../controller/userController.js";
+
 import {
   isAdminAuthenticated,
   isPatientAuthenticated,
-} from "../middlewares/auth.js";
-
+} from "../middlewares/auth.js"
 const router = express.Router();
 
 router.post("/patient/register", patientRegister);
