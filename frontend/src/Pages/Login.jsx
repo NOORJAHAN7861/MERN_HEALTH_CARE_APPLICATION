@@ -1,8 +1,10 @@
-import axios from "axios";
-import React, { useContext, useState } from "react";
+import { api } from "../utils/api";
 import { toast } from "react-toastify";
 import { Context } from "../main";
 import { Link, useNavigate, Navigate } from "react-router-dom";
+import React, { useContext, useState } from "react";
+
+
 
 const Login = () => {
   const { isAuthenticated, setIsAuthenticated } = useContext(Context);
@@ -14,29 +16,34 @@ const Login = () => {
   const navigateTo = useNavigate();
 
   const handleLogin = async (e) => {
-    e.preventDefault();
-    try {
-      await axios
-        .post(
-          "http://localhost:5000/api/v1/user/login",
-          { email, password, confirmPassword, role: "Patient" },
-          {
-            withCredentials: true,
-            headers: { "Content-Type": "application/json" },
-          }
-        )
-        .then((res) => {
-          toast.success(res.data.message);
-          setIsAuthenticated(true);
-          navigateTo("/");
-          setEmail("");
-          setPassword("");
-          setConfirmPassword("");
-        });
-    } catch (error) {
-      toast.error(error.response.data.message);
-    }
-  };
+  e.preventDefault();
+
+  try {
+    const { data } = await api.post(
+      "/api/v1/user/login",
+      {
+        email,
+        password,
+        confirmPassword,
+        role: "Patient",
+      },
+      {
+        headers: { "Content-Type": "application/json" },
+      }
+    );
+
+    toast.success(data.message);
+    setIsAuthenticated(true);
+    navigateTo("/");
+
+    setEmail("");
+    setPassword("");
+    setConfirmPassword("");
+
+  } catch (error) {
+    toast.error(error.response?.data?.message || "Login failed");
+  }
+};
 
   if (isAuthenticated) {
     return <Navigate to={"/"} />;
@@ -85,7 +92,7 @@ const Login = () => {
             </Link>
           </div>
           <div style={{ justifyContent: "center", alignItems: "center" }}>
-            <button type="submit">Login</button>
+            <button type="submit" onSubmit={handleLogin}>Login</button>
           </div>
         </form>
       </div>

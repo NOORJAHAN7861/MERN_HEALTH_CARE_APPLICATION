@@ -1,26 +1,25 @@
-import axios from "axios";
+import {api} from "../utils/api";
+import { Context } from "../main";
+import { Navigate } from "react-router-dom";  
 import React, { useContext, useEffect, useState } from "react";
 import { toast } from "react-toastify";
-import { Context } from "../main";
-import { Navigate } from "react-router-dom";
 
 const Doctors = () => {
   const [doctors, setDoctors] = useState([]);
   const { isAuthenticated } = useContext(Context);
-  useEffect(() => {
-    const fetchDoctors = async () => {
-      try {
-        const { data } = await axios.get(
-          "http://localhost:5000/api/v1/user/doctors",
-          { withCredentials: true }
-        );
-        setDoctors(data.doctors);
-      } catch (error) {
-        toast.error(error.response.data.message);
-      }
-    };
-    fetchDoctors();
-  }, []);
+ useEffect(() => {
+  const fetchDoctors = async () => {
+    try {
+      const { data } = await api.get("/api/v1/user/doctors");
+      setDoctors(data.doctors);
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Something went wrong");
+    }
+  };
+
+  fetchDoctors();
+}, []);
+    
 
   if (!isAuthenticated) {
     return <Navigate to={"/login"} />;

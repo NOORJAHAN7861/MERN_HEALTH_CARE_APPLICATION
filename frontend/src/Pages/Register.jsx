@@ -1,4 +1,4 @@
-import axios from "axios";
+import { api } from "../utils/api";
 import React, { useContext, useState } from "react";
 import { toast } from "react-toastify";
 import { Context } from "../main";
@@ -19,34 +19,43 @@ const Register = () => {
   const navigateTo = useNavigate();
 
   const handleRegistration = async (e) => {
-    e.preventDefault();
-    try {
-      await axios
-        .post(
-          "http://localhost:5000/api/v1/user/patient/register",
-          { firstName, lastName, email, phone, nic, dob, gender, password },
-          {
-            withCredentials: true,
-            headers: { "Content-Type": "application/json" },
-          }
-        )
-        .then((res) => {
-          toast.success(res.data.message);
-          setIsAuthenticated(true);
-          navigateTo("/");
-          setFirstName("");
-          setLastName("");
-          setEmail("");
-          setPhone("");
-          setNic("");
-          setDob("");
-          setGender("");
-          setPassword("");
-        });
-    } catch (error) {
-      toast.error(error.response.data.message);
-    }
-  };
+  e.preventDefault();
+
+  try {
+    const { data } = await api.post(
+      "/api/v1/user/patient/register",
+      {
+        firstName,
+        lastName,
+        email,
+        phone,
+        nic,
+        dob,
+        gender,
+        password,
+      },
+      {
+        headers: { "Content-Type": "application/json" },
+      }
+    );
+
+    toast.success(data.message);
+    setIsAuthenticated(true);
+    navigateTo("/");
+
+    setFirstName("");
+    setLastName("");
+    setEmail("");
+    setPhone("");
+    setNic("");
+    setDob("");
+    setGender("");
+    setPassword("");
+
+  } catch (error) {
+    toast.error(error.response?.data?.message || "Registration failed");
+  }
+};
 
   if (isAuthenticated) {
     return <Navigate to={"/"} />;
@@ -58,8 +67,7 @@ const Register = () => {
         <h2>Sign Up</h2>
         <p>Please Sign Up To Continue</p>
         <p>
-          Lorem ipsum dolor sit amet consectetur adipisicing elit. Placeat culpa
-          voluptas expedita itaque ex, totam ad quod error?
+          Experience world class healthcare services with compassion and excellence.
         </p>
         <form onSubmit={handleRegistration}>
           <div>
@@ -133,7 +141,7 @@ const Register = () => {
             </Link>
           </div>
           <div style={{ justifyContent: "center", alignItems: "center" }}>
-            <button type="submit">Register</button>
+            <button type="submit" onsubmit={handleRegistration}>Register</button>
           </div>
         </form>
       </div>

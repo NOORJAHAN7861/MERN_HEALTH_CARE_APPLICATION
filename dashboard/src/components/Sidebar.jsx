@@ -6,7 +6,7 @@ import { GiHamburgerMenu } from "react-icons/gi";
 import { FaUserDoctor } from "react-icons/fa6";
 import { MdAddModerator } from "react-icons/md";
 import { IoPersonAddSharp } from "react-icons/io5";
-import axios from "axios";
+import { api } from "../utils/api";
 import { toast } from "react-toastify";
 import { Context } from "../main";
 import { useNavigate } from "react-router-dom";
@@ -15,21 +15,17 @@ const Sidebar = () => {
   const [show, setShow] = useState(false);
 
   const { isAuthenticated, setIsAuthenticated } = useContext(Context);
+const handleLogout = async () => {
+  try {
+    const { data } = await api.get("/api/v1/user/admin/logout");
 
-  const handleLogout = async () => {
-    await axios
-      .get("http://localhost:5000/api/v1/user/admin/logout", {
-        withCredentials: true,
-      })
-      .then((res) => {
-        toast.success(res.data.message);
-        setIsAuthenticated(false);
-      })
-      .catch((err) => {
-        toast.error(err.response.data.message);
-      });
-  };
+    toast.success(data.message);
+    setIsAuthenticated(false);
 
+  } catch (error) {
+    toast.error(error.response?.data?.message || "Logout failed");
+  }
+};
   const navigateTo = useNavigate();
 
   const gotoHomePage = () => {

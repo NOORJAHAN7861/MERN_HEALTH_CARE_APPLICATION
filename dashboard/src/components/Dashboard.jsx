@@ -1,7 +1,7 @@
 import React, { useContext, useEffect, useState } from "react";
 import { Context } from "../main";
 import { Navigate } from "react-router-dom";
-import axios from "axios";
+import { api } from "../utils/api";
 import { toast } from "react-toastify";
 import { GoCheckCircleFill } from "react-icons/go";
 import { AiFillCloseCircle } from "react-icons/ai";
@@ -9,39 +9,38 @@ import { AiFillCloseCircle } from "react-icons/ai";
 const Dashboard = () => {
   const [appointments, setAppointments] = useState([]);
 
-  useEffect(() => {
-    const fetchAppointments = async () => {
-      try {
-        const { data } = await axios.get(
-          "http://localhost:5000/api/v1/appointment/getall",
-          { withCredentials: true }
-        );
-        setAppointments(data.appointments);
-      } catch (error) {
-        setAppointments([]);
-      }
-    };
-    fetchAppointments();
-  }, []);
+useEffect(() => {
+  const fetchAppointments = async () => {
+    try {
+      const { data } = await api.get("/api/v1/appointment/getall");
+      setAppointments(data.appointments);
+    } catch (error) {
+      setAppointments([]);
+    }
+  };
+
+  fetchAppointments();
+}, []);
 
   const handleUpdateStatus = async (appointmentId, status) => {
-    try {
-      const { data } = await axios.put(
-        `http://localhost:5000/api/v1/appointment/update/${appointmentId}`,
-        { status },
-        { withCredentials: true }
-      );
-      setAppointments((prevAppointments) =>
-        prevAppointments.map((appointment) =>
-          appointment._id === appointmentId
-            ? { ...appointment, status }
-            : appointment
-        )
-      );
-      toast.success(data.message);
-    } catch (error) {
-      toast.error(error.response.data.message);
-    }
+   try {
+  const { data } = await api.put(
+    `/api/v1/appointment/update/${appointmentId}`,
+    { status }
+  );
+
+  setAppointments((prevAppointments) =>
+    prevAppointments.map((appointment) =>
+      appointment._id === appointmentId
+        ? { ...appointment, status }
+        : appointment
+    )
+  );
+
+  toast.success(data.message);
+} catch (error) {
+  toast.error(error.response?.data?.message || "Something went wrong");
+}
   };
 
   const { isAuthenticated, admin } = useContext(Context);
@@ -64,9 +63,9 @@ const Dashboard = () => {
                 </h5>
               </div>
               <p>
-                Lorem ipsum dolor sit, amet consectetur adipisicing elit.
-                Facilis, nam molestias. Eaque molestiae ipsam commodi neque.
-                Assumenda repellendus necessitatibus itaque.
+                Welcome to your dashboard! Here you can manage appointments,
+                view patient messages, and oversee doctor registrations. Stay
+                organized and efficient with our user-friendly interface.
               </p>
             </div>
           </div>
