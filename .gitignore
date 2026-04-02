@@ -1,2 +1,14 @@
 node_modules
 backend/config.env
+frontent/dist
+.DS_Store
+*.log   
+# Ignore environment variable files
+.env    
+# Ignore build artifacts
+dist/
+build/  
+# Ignore IDE and editor files
+.vscode/
+.idea/
+# Ignore OS-specific files

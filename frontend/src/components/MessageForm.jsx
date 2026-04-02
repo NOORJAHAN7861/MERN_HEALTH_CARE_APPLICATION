@@ -11,27 +11,26 @@ const MessageForm = () => {
 
   const handleMessage = async (e) => {
     e.preventDefault();
-    try {
-      await axios
-        .post(
-          "/api/v1/message/send",
-          { firstName, lastName, email, phone, message },
-          {
-            withCredentials: true,
-            headers: { "Content-Type": "application/json" },
-          }
-        )
-        .then((res) => {
-          toast.success(res.data.message);
-          setFirstName("");
-          setLastName("");
-          setEmail("");
-          setPhone("");
-          setMessage("");
-        });
-    } catch (error) {
-      toast.error(error.response.data.message);
-    }
+   try {
+  const res = await api.post("/api/v1/message/send", {
+    firstName,
+    lastName,
+    email,
+    phone,
+    message,
+  });
+
+  toast.success(res.data.message);
+
+  setFirstName("");
+  setLastName("");
+  setEmail("");
+  setPhone("");
+  setMessage("");
+   
+} catch (error) {
+  toast.error(error?.response?.data?.message || "Something went wrong");
+}
   };
 
   return (
@@ -74,7 +73,7 @@ const MessageForm = () => {
             onChange={(e) => setMessage(e.target.value)}
           />
           <div style={{ justifyContent: "center", alignItems: "center" }}>
-            <button onClick={handleMessage} type="submit">Send</button>
+            <button type="submit">Send</button>
           </div>
         </form>
         <img src="/Vector.png" alt="vector" />
