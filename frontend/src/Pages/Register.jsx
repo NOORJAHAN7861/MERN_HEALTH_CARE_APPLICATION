@@ -7,141 +7,81 @@ import { Link, Navigate, useNavigate } from "react-router-dom";
 const Register = () => {
   const { isAuthenticated, setIsAuthenticated } = useContext(Context);
 
-  const [firstName, setFirstName] = useState("");
-  const [lastName, setLastName] = useState("");
-  const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
-  const [nic, setNic] = useState("");
-  const [dob, setDob] = useState("");
-  const [gender, setGender] = useState("");
-  const [password, setPassword] = useState("");
+  const [form, setForm] = useState({
+    firstName: "", lastName: "", email: "", phone: "",
+    nic: "", dob: "", gender: "", password: "", confirmPassword: ""
+  });
 
-  const navigateTo = useNavigate();
+  const navigate = useNavigate();
+
+  const handleChange = (e) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
+  };
 
   const handleRegistration = async (e) => {
     e.preventDefault();
+
+    if (form.password !== form.confirmPassword) {
+      toast.error("Passwords do not match!");
+      return;
+    }
 
     try {
       const { data } = await api.post(
         "/api/v1/user/patient/register",
         {
-          firstName,
-          lastName,
-          email,
-          phone,
-          nic,
-          dob,
-          gender,
-          password,
+          firstName: form.firstName,
+          lastName: form.lastName,
+          email: form.email,
+          phone: form.phone,
+          nic: form.nic,
+          dob: form.dob,
+          gender: form.gender,
+          password: form.password,
         },
-        {
-          headers: { "Content-Type": "application/json" },
-        }
+        { withCredentials: true }
       );
 
       toast.success(data.message);
       setIsAuthenticated(true);
-      navigateTo("/");
-
-      // Reset form
-      setFirstName("");
-      setLastName("");
-      setEmail("");
-      setPhone("");
-      setNic("");
-      setDob("");
-      setGender("");
-      setPassword("");
+      localStorage.setItem("isAuth", "true");
+      navigate("/profile"); // ✅ redirect to profile/dashboard
     } catch (error) {
       toast.error(error.response?.data?.message || "Registration failed");
     }
   };
 
-  if (isAuthenticated) {
-    return <Navigate to="/" />;
-  }
+  if (isAuthenticated) return <Navigate to="/" />;
 
   return (
     <div className="container form-component register-form">
       <h2>Sign Up</h2>
-      <p>Please Sign Up To Continue</p>
-      <p>
-        Experience world class healthcare services with compassion and excellence.
-      </p>
+
       <form onSubmit={handleRegistration}>
-        <div>
-          <input
-            type="text"
-            placeholder="First Name"
-            value={firstName}
-            onChange={(e) => setFirstName(e.target.value)}
-          />
-          <input
-            type="text"
-            placeholder="Last Name"
-            value={lastName}
-            onChange={(e) => setLastName(e.target.value)}
-          />
+        <input name="firstName" type="text" placeholder="First Name" value={form.firstName} onChange={handleChange} required />
+        <input name="lastName" type="text" placeholder="Last Name" value={form.lastName} onChange={handleChange} required />
+        <input name="email" type="email" placeholder="Email" value={form.email} onChange={handleChange} required />
+        <input name="phone" type="text" placeholder="Phone (11 digits)" value={form.phone} onChange={handleChange} required />
+        <input name="nic" type="text" placeholder="NIC (13 digits)" value={form.nic} onChange={handleChange} required />
+        <input name="dob" type="date" value={form.dob} onChange={handleChange} required />
+
+        <div className="gender-options">
+          <label>
+            <input type="radio" name="gender" value="Male" checked={form.gender === "Male"} onChange={handleChange} /> Male
+          </label>
+          <label>
+            <input type="radio" name="gender" value="Female" checked={form.gender === "Female"} onChange={handleChange} /> Female
+          </label>
         </div>
-        <div>
-          <input
-            type="text"
-            placeholder="Email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-          />
-          <input
-            type="number"
-            placeholder="Mobile Number"
-            value={phone}
-            onChange={(e) => setPhone(e.target.value)}
-          />
-        </div>
-        <div>
-          <input
-            type="number"
-            placeholder="NIC"
-            value={nic}
-            onChange={(e) => setNic(e.target.value)}
-          />
-          <input
-            type="date"
-            placeholder="Date of Birth"
-            value={dob}
-            onChange={(e) => setDob(e.target.value)}
-          />
-        </div>
-        <div>
-          <select value={gender} onChange={(e) => setGender(e.target.value)}>
-            <option value="">Select Gender</option>
-            <option value="Male">Male</option>
-            <option value="Female">Female</option>
-          </select>
-          <input
-            type="password"
-            placeholder="Password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
-        </div>
-        <div
-          style={{
-            gap: "10px",
-            justifyContent: "flex-end",
-            flexDirection: "row",
-          }}
-        >
-          <p style={{ marginBottom: 0 }}>Already Registered?</p>
-          <Link
-            to="/signin"
-            style={{ textDecoration: "none", color: "#271776ca" }}
-          >
-            Login Now
-          </Link>
-        </div>
-        <div style={{ justifyContent: "center", alignItems: "center" }}>
-          <button type="submit">Register</button>
-        </div>
+
+        <input name="password" type="password" placeholder="Password (min 8 chars)" value={form.password} onChange={handleChange} required />
+        <input name="confirmPassword" type="password" placeholder="Confirm Password" value={form.confirmPassword} onChange={handleChange} required />
+
+        <button type="submit">Register</button>
+
+        <p>
+          Already Registered? <Link to="/login">Login Now</Link>
+        </p>
       </form>
     </div>
   );

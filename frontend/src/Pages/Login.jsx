@@ -1,104 +1,54 @@
-import { api } from "../utils/api";
+import React, { useContext, useState } from "react";
+import { Navigate, useNavigate, Link } from "react-router-dom";
 import { toast } from "react-toastify";
 import { Context } from "../main";
-import { Link, useNavigate, Navigate } from "react-router-dom";
-import React, { useContext, useState } from "react";
+import { api } from "../utils/api";
 
-
-
-const Login = () => {
-  const { isAuthenticated, setIsAuthenticated } = useContext(Context);
-
+const UserLogin = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-
-  const navigateTo = useNavigate();
+  const { isAuthenticated, setIsAuthenticated } = useContext(Context);
+  const navigate = useNavigate();
 
   const handleLogin = async (e) => {
-  e.preventDefault();
+    e.preventDefault();
+    try {
+      const { data } = await api.post("/api/v1/user/login", { email, password }, { withCredentials: true });
 
-  try {
-    const { data } = await api.post(
-      "/api/v1/user/login",
-      {
-        email,
-        password,
-        confirmPassword,
-        role: "Patient",
-      },
-      {
-        headers: { "Content-Type": "application/json" },
+      if (data.user.role !== "Patient") {
+        toast.error("Unauthorized: Only patients can log in here");
+        return;
       }
-    );
 
-    toast.success(data.message);
-    setIsAuthenticated(true);
-    navigateTo("/");
+      toast.success(data.message);
+      setIsAuthenticated(true);
+      localStorage.setItem("isAuth", "true");
+      localStorage.setItem("user", JSON.stringify(data.user));
 
-    setEmail("");
-    setPassword("");
-    setConfirmPassword("");
+      navigate("/"); // ✅ redirect to home after login
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Login failed");
+    }
+  };
 
-  } catch (error) {
-    toast.error(error.response?.data?.message || "Login failed");
-  }
-};
-
-  if (isAuthenticated) {
-    return <Navigate to={"/"} />;
-  }
+  if (isAuthenticated) return <Navigate to="/" />;
 
   return (
-    <>
-      <div className="container form-component login-form">
-        <h2>Sign In</h2>
-        <p>Please Login To Continue</p>
-        <p>
-         world class healthcare services with compassion and excellence.
-        </p>
-        <form onSubmit={handleLogin}>
-          <input
-            type="text"
-            placeholder="Email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-          />
-          <input
-            type="password"
-            placeholder="Password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
-          <input
-            type="password"
-            placeholder="Confirm Password"
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
-          />
-          <div
-            style={{
-              gap: "10px",
-              justifyContent: "flex-end",
-              flexDirection: "row",
-            }}
-          >
-            <p style={{ marginBottom: 0 }}>Not Registered?</p>
-            <Link
-              to={"/register"}
-              style={{ textDecoration: "none", color: "#271776ca" }}
-            >
-              Register Now
-            </Link>
-          </div>
-          <div style={{ justifyContent: "center", alignItems: "center" }}>
-            <button type="submit">Login</button>
+    <section className="container form-component">
+      <h1 className="form-title">User Login</h1>
+      <form onSubmit={handleLogin}>
+        <input type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+        <input type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+        <button type="submit">Login</button>
+      </form>
 
-          </div>
-        </form>
-      </div>
-    </>
+      <p>
+        Not registered yet? <Link to="/register">Sign Up</Link>
+      </p>
+    </section>
   );
 };
 
-export default Login;
+export default UserLogin;
+
+

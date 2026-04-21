@@ -1,141 +1,174 @@
-import React, { useContext, useEffect, useState } from "react";
-import { Context } from "../main";
-import { Navigate } from "react-router-dom";
+import React, { useEffect, useState } from "react";
 import { api } from "../utils/api";
 import { toast } from "react-toastify";
-import { GoCheckCircleFill } from "react-icons/go";
-import { AiFillCloseCircle } from "react-icons/ai";
 
-const Dashboard = () => {
-  const [appointments, setAppointments] = useState([]);
+const AppointmentForm = () => {
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const [nic, setNic] = useState("");
+  const [dob, setDob] = useState("");
+  const [gender, setGender] = useState("");
+  const [appointmentDate, setAppointmentDate] = useState("");
+  const [department, setDepartment] = useState("");
+  const [doctorId, setDoctorId] = useState("");
+  const [address, setAddress] = useState("");
+  const [hasVisited, setHasVisited] = useState(false);
 
-useEffect(() => {
-  const fetchAppointments = async () => {
+  const [doctors, setDoctors] = useState([]);
+
+  const departmentsArray = [
+    "Pediatrics",
+    "Orthopedics",
+    "Cardiology",
+    "Neurology",
+    "Oncology",
+    "Radiology",
+    "Physical Therapy",
+    "Dermatology",
+    "ENT",
+  ];
+
+  useEffect(() => {
+    const fetchDoctors = async () => {
+      try {
+        const res = await api.get("/api/v1/user/doctors", {
+          withCredentials: true,
+        });
+        setDoctors(res.data.doctors);
+      } catch (error) {
+        console.error(error);
+      }
+    };
+    fetchDoctors();
+  }, []);
+
+  const handleAppointment = async (e) => {
+    e.preventDefault();
+
     try {
-      const { data } = await api.get("/api/v1/appointment/getall");
-      setAppointments(data.appointments);
+      const { data } = await api.post(
+        "/api/v1/appointment/post",
+        {
+          firstName,
+          lastName,
+          email,
+          phone,
+          nic,
+          dob,
+          gender,
+          appointment_date: appointmentDate,
+          department,
+          doctorId,
+          address,
+          hasVisited,
+        },
+        { withCredentials: true }
+      );
+
+      toast.success(data.message);
     } catch (error) {
-      setAppointments([]);
+      toast.error(error.response?.data?.message || "Error booking appointment");
     }
   };
 
-  fetchAppointments();
-}, []);
-
-  const handleUpdateStatus = async (appointmentId, status) => {
-   try {
-  const { data } = await api.put(
-    `/api/v1/appointment/update/${appointmentId}`,
-    { status }
-  );
-
-  setAppointments((prevAppointments) =>
-    prevAppointments.map((appointment) =>
-      appointment._id === appointmentId
-        ? { ...appointment, status }
-        : appointment
-    )
-  );
-
-  toast.success(data.message);
-} catch (error) {
-  toast.error(error.response?.data?.message || "Something went wrong");
-}
-  };
-
-  const { isAuthenticated, admin } = useContext(Context);
-  if (!isAuthenticated) {
-    return <Navigate to={"/login"} />;
-  }
-
   return (
-    <>
-      <section className="dashboard page">
-        <div className="banner">
-          <div className="firstBox">
-            <img src="/doc.png" alt="docImg" />
-            <div className="content">
-              <div>
-                <p>Hello ,</p>
-                <h5>
-                  {admin &&
-                    `${admin.firstName} ${admin.lastName}`}{" "}
-                </h5>
-              </div>
-              <p>
-                Welcome to your dashboard! Here you can manage appointments,
-                view patient messages, and oversee doctor registrations. Stay
-                organized and efficient with our user-friendly interface.
-              </p>
-            </div>
-          </div>
-          <div className="secondBox">
-            <p>Total Appointments</p>
-            <h3>1500</h3>
-          </div>
-          <div className="thirdBox">
-            <p>Registered Doctors</p>
-            <h3>10</h3>
-          </div>
-        </div>
-        <div className="banner">
-          <h5>Appointments</h5>
-          <table>
-            <thead>
-              <tr>
-                <th>Patient</th>
-                <th>Date</th>
-                <th>Doctor</th>
-                <th>Department</th>
-                <th>Status</th>
-                <th>Visited</th>
-              </tr>
-            </thead>
-            <tbody>
-              {appointments && appointments.length > 0
-                ? appointments.map((appointment) => (
-                    <tr key={appointment._id}>
-                      <td>{`${appointment.firstName} ${appointment.lastName}`}</td>
-                      <td>{appointment.appointment_date.substring(0, 16)}</td>
-                      <td>{`${appointment.doctor.firstName} ${appointment.doctor.lastName}`}</td>
-                      <td>{appointment.department}</td>
-                      <td>
-                        <select
-                          className={
-                            appointment.status === "Pending"
-                              ? "value-pending"
-                              : appointment.status === "Accepted"
-                              ? "value-accepted"
-                              : "value-rejected"
-                          }
-                          value={appointment.status}
-                          onChange={(e) =>
-                            handleUpdateStatus(appointment._id, e.target.value)
-                          }
-                        >
-                          <option value="Pending" className="value-pending">
-                            Pending
-                          </option>
-                          <option value="Accepted" className="value-accepted">
-                            Accepted
-                          </option>
-                          <option value="Rejected" className="value-rejected">
-                            Rejected
-                          </option>
-                        </select>
-                      </td>
-                      <td>{appointment.hasVisited === true ? <GoCheckCircleFill className="green"/> : <AiFillCloseCircle className="red"/>}</td>
-                    </tr>
-                  ))
-                : "No Appointments Found!"}
-            </tbody>
-          </table>
+    <div className="appointment-form-container">
+      <h2>Book an Appointment</h2>
 
-          {}
-        </div>
-      </section>
-    </>
+      <form onSubmit={handleAppointment}>
+        <input
+          type="text"
+          placeholder="First Name"
+          value={firstName}
+          onChange={(e) => setFirstName(e.target.value)}
+        />
+
+        <input
+          type="text"
+          placeholder="Last Name"
+          value={lastName}
+          onChange={(e) => setLastName(e.target.value)}
+        />
+
+        <input
+          type="email"
+          placeholder="Email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+        />
+
+        <input
+          type="text"
+          placeholder="Phone"
+          value={phone}
+          onChange={(e) => setPhone(e.target.value)}
+        />
+
+        <input
+          type="text"
+          placeholder="NIC"
+          value={nic}
+          onChange={(e) => setNic(e.target.value)}
+        />
+
+        <input type="date" value={dob} onChange={(e) => setDob(e.target.value)} />
+
+        <select value={gender} onChange={(e) => setGender(e.target.value)}>
+          <option value="">Select Gender</option>
+          <option value="Male">Male</option>
+          <option value="Female">Female</option>
+        </select>
+
+        <input
+          type="date"
+          value={appointmentDate}
+          onChange={(e) => setAppointmentDate(e.target.value)}
+        />
+
+        {/* Department Dropdown */}
+        <select value={department} onChange={(e) => setDepartment(e.target.value)}>
+          <option value="">Select Department</option>
+          {departmentsArray.map((dept, i) => (
+            <option key={i} value={dept}>
+              {dept}
+            </option>
+          ))}
+        </select>
+
+        {/* Doctor Dropdown */}
+        <select value={doctorId} onChange={(e) => setDoctorId(e.target.value)}>
+          <option value="">Select Doctor</option>
+          {doctors
+            .filter((doc) => doc.doctorDepartment === department)
+            .map((doc) => (
+              <option key={doc._id} value={doc._id}>
+                {doc.firstName} {doc.lastName}
+              </option>
+            ))}
+        </select>
+
+        <textarea
+          placeholder="Address"
+          value={address}
+          onChange={(e) => setAddress(e.target.value)}
+        />
+
+        <label>
+          <input
+            type="checkbox"
+            checked={hasVisited}
+            onChange={(e) => setHasVisited(e.target.checked)}
+          />
+          Visited Before
+        </label>
+
+        <button type="submit">Book Appointment</button>
+      </form>
+    </div>
   );
 };
 
-export default Dashboard;
+export default AppointmentForm;
+

@@ -5,7 +5,7 @@ import { toast } from "react-toastify";
 import { api } from "../utils/api";
 
 const AddNewAdmin = () => {
-  const { isAuthenticated, setIsAuthenticated } = useContext(Context);
+  const { isAuthenticated, user } = useContext(Context);
 
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
@@ -15,44 +15,60 @@ const AddNewAdmin = () => {
   const [dob, setDob] = useState("");
   const [gender, setGender] = useState("");
   const [password, setPassword] = useState("");
+  const [formError, setFormError] = useState("");
 
-  const navigateTo = useNavigate();
+  const navigate = useNavigate();
 
   const handleAddNewAdmin = async (e) => {
     e.preventDefault();
-  try {
-  const res = await api.post(
-    "/api/v1/user/admin/addnew",
-    { firstName, lastName, email, phone, nic, dob, gender, password }
-  );
+    setFormError("");
 
-  toast.success(res.data.message);
-  setIsAuthenticated(true);
-  navigateTo("/");
+    try {
+      const res = await api.post(
+        "/api/v1/user/admin/addnew",
+        {
+          firstName,
+          lastName,
+          email,
+          phone,
+          nic,
+          dob,
+          gender,
+          password,
+        },
+        { withCredentials: true }
+      );
 
-  setFirstName("");
-  setLastName("");
-  setEmail("");
-  setPhone("");
-  setNic("");
-  setDob("");
-  setGender("");
-  setPassword("");
+      toast.success(res.data.message);
+      navigate("/");
 
-} catch (error) {
-  toast.error(error?.response?.data?.message || "Something went wrong");
-}
+      // reset
+      setFirstName("");
+      setLastName("");
+      setEmail("");
+      setPhone("");
+      setNic("");
+      setDob("");
+      setGender("");
+      setPassword("");
+    } catch (error) {
+      const msg = error?.response?.data?.message || "Something went wrong";
+      setFormError(msg);
+      toast.error(msg);
+    }
   };
 
-  if (!isAuthenticated) {
-    return <Navigate to={"/login"} />;
+  // ✅ Only Admin can access
+  if (!isAuthenticated || user?.role !== "Admin") {
+    return <Navigate to="/login" />;
   }
 
   return (
     <section className="page">
       <section className="container form-component add-admin-form">
-      <img src="/logo.png" alt="logo" className="logo"/>
+        <img src="/logo.png" alt="logo" className="logo" />
         <h1 className="form-title">ADD NEW ADMIN</h1>
+
         <form onSubmit={handleAddNewAdmin}>
           <div>
             <input
@@ -60,61 +76,81 @@ const AddNewAdmin = () => {
               placeholder="First Name"
               value={firstName}
               onChange={(e) => setFirstName(e.target.value)}
+              required
             />
             <input
               type="text"
               placeholder="Last Name"
               value={lastName}
               onChange={(e) => setLastName(e.target.value)}
+              required
             />
           </div>
+
           <div>
             <input
-              type="text"
+              type="email"
               placeholder="Email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              required
             />
             <input
-              type="number"
+              type="text"
               placeholder="Mobile Number"
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
+              required
             />
           </div>
+
           <div>
             <input
-              type="number"
+              type="text"
               placeholder="NIC"
               value={nic}
               onChange={(e) => setNic(e.target.value)}
+              required
             />
             <input
-              type={"date"}
-              placeholder="Date of Birth"
+              type="date"
               value={dob}
               onChange={(e) => setDob(e.target.value)}
+              required
             />
           </div>
+
           <div>
-            <select value={gender} onChange={(e) => setGender(e.target.value)}>
+            <select
+              value={gender}
+              onChange={(e) => setGender(e.target.value)}
+              required
+            >
               <option value="">Select Gender</option>
               <option value="Male">Male</option>
               <option value="Female">Female</option>
             </select>
+
             <input
               type="password"
               placeholder="Password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              required
             />
           </div>
-          <div style={{ justifyContent: "center", alignItems: "center" }}>
-            <button type="submit" onSubmit={handleAddNewAdmin}>ADD NEW ADMIN</button>
+
+          {formError && (
+            <p style={{ color: "red", textAlign: "center" }}>{formError}</p>
+          )}
+
+          <div style={{ justifyContent: "center" }}>
+            <button type="submit">ADD NEW ADMIN</button>
           </div>
         </form>
       </section>
     </section>
   );
 };
+
 export default AddNewAdmin;

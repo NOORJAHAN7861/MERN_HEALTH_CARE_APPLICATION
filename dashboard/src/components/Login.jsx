@@ -1,83 +1,73 @@
 import React, { useContext, useState } from "react";
-import { Navigate, useNavigate } from "react-router-dom";
+import { Navigate, useNavigate, Link } from "react-router-dom";
 import { toast } from "react-toastify";
 import { Context } from "../main";
 import { api } from "../utils/api";
 
-const Login = () => {
+const AdminLogin = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-
   const { isAuthenticated, setIsAuthenticated } = useContext(Context);
+  const navigate = useNavigate();
 
-  const navigateTo = useNavigate();
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    try {
+      const { data } = await api.post(
+        "/api/v1/user/login",
+        { email, password },
+        { withCredentials: true }
+      );
 
- const handleLogin = async (e) => {
-  e.preventDefault();
-
-  try {
-    const { data } = await api.post(
-      "/api/v1/user/login",
-      {
-        email,
-        password,
-        confirmPassword,
-        role: "Admin",
-      },
-      {
-        headers: { "Content-Type": "application/json" },
+      // ✅ Only allow Admins
+      if (data.user.role !== "Admin") {
+        toast.error("Unauthorized: Only admins can log in here");
+        localStorage.removeItem("isAuth");
+        localStorage.removeItem("user");
+        return;
       }
-    );
 
-    toast.success(data.message);
-    setIsAuthenticated(true);
-    navigateTo("/");
+      toast.success(data.message);
+      setIsAuthenticated(true);
+      localStorage.setItem("isAuth", "true");
+      localStorage.setItem("user", JSON.stringify(data.user));
 
-    setEmail("");
-    setPassword("");
-    setConfirmPassword("");
+      navigate("/admin/dashboard");
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Login failed");
+    }
+  };
 
-  } catch (error) {
-    toast.error(error.response?.data?.message || "Login failed");
-  }
-};
-
-  if (isAuthenticated) {
-    return <Navigate to={"/"} />;
-  }
+  if (isAuthenticated) return <Navigate to="/admin/dashboard" />;
 
   return (
-    <>
-      <section className="container form-component">
-        <h1 className="form-title">WELCOME TO NOOR HOSPITAL</h1>
-        <p>Only Admins Are Allowed To Access These Resources!</p>
-        <form onSubmit={handleLogin}>
-          <input
-            type="text"
-            placeholder="Email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-          />
-          <input
-            type="password"
-            placeholder="Password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
-          <input
-            type="password"
-            placeholder="Confirm Password"
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
-          />
-          <div style={{ justifyContent: "center", alignItems: "center" }}>
-            <button type="submit" onsubmit = {handleLogin}>Login</button>
-          </div>
-        </form>
-      </section>
-    </>
+    <section className="container form-component">
+      <h1 className="form-title">Admin Login</h1>
+      <form onSubmit={handleLogin}>
+        <input
+          type="email"
+          placeholder="Admin Email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          required
+        />
+
+        <input
+          type="password"
+          placeholder="Password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          required
+        />
+
+        <button type="submit">Login</button>
+      </form>
+
+      <p>
+        Not registered yet? <Link to="/register">Sign Up</Link>
+      </p>
+    </section>
   );
 };
 
-export default Login;
+export default AdminLogin;
